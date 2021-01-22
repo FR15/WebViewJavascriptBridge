@@ -8,7 +8,9 @@
     UITabBarController *tabBarController = [[UITabBarController alloc] init];
 
     ExampleWKWebViewController* WKWebViewExampleController = [[ExampleWKWebViewController alloc] init];
-    WKWebViewExampleController.tabBarItem.title             = @"WKWebView";
+    
+    WKWebViewExampleController.tabBarItem.title = @"WKWebView";
+    
     [tabBarController addChildViewController:WKWebViewExampleController];
 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];

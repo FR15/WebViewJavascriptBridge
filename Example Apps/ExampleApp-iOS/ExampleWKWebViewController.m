@@ -21,9 +21,9 @@
     if (_bridge) { return; }
     
     WKWebView* webView = [[NSClassFromString(@"WKWebView") alloc] initWithFrame:self.view.bounds];
-    // 这里已经没用了
     webView.navigationDelegate = self;
     [self.view addSubview:webView];
+    
     [WKWebViewJavascriptBridge enableLogging];
     _bridge = [WKWebViewJavascriptBridge bridgeForWebView:webView];
     [_bridge setWebViewDelegate:self];
@@ -34,7 +34,7 @@
         responseCallback(@"Response from testObjcCallback");
     }];
     
-    // native call js
+    // call js with (id, param)
     [_bridge callHandler:@"testJavascriptHandler" data:@{ @"foo":@"before ready" }];
     
     [self renderButtons:webView];

@@ -158,3 +158,13 @@ function _dispatchMessageFromObjC(messageJSON) {
 
 ```
 
+
+![从零收拾一个hybrid框架](http://awhisper.github.io/2018/01/02/hybrid-jscomunication/)
+
+![iOS WKWebView优化方案](https://www.jianshu.com/p/866c60eb8979)
+
+![iOS WebView 的 Hybrid 框架设计](https://zhuanlan.zhihu.com/p/25728960)
+
+![WKWebView那些坑_腾讯Bug](https://blog.csdn.net/tencent_bugly/article/details/54668721/)
+
+![WKWebView加载3d模型占用内存过大导致的白屏问](https://www.jianshu.com/p/709b1c83970a?utm_campaign=maleskine&utm_content=note&utm_medium=seo_notes&utm_source=recommendation)
