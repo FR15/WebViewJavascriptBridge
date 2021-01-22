@@ -7,11 +7,11 @@
 //
 
 #import "ExampleWKWebViewController.h"
-#import "WebViewJavascriptBridge.h"
+#import "WKWebViewJavascriptBridge.h"
 
 @interface ExampleWKWebViewController ()
 
-@property WebViewJavascriptBridge* bridge;
+@property WKWebViewJavascriptBridge* bridge;
 
 @end
 
@@ -21,17 +21,20 @@
     if (_bridge) { return; }
     
     WKWebView* webView = [[NSClassFromString(@"WKWebView") alloc] initWithFrame:self.view.bounds];
+    // 这里已经没用了
     webView.navigationDelegate = self;
     [self.view addSubview:webView];
-    [WebViewJavascriptBridge enableLogging];
-    _bridge = [WebViewJavascriptBridge bridgeForWebView:webView];
+    [WKWebViewJavascriptBridge enableLogging];
+    _bridge = [WKWebViewJavascriptBridge bridgeForWebView:webView];
     [_bridge setWebViewDelegate:self];
     
+    // 注册回调，js call native 回调
     [_bridge registerHandler:@"testObjcCallback" handler:^(id data, WVJBResponseCallback responseCallback) {
         NSLog(@"testObjcCallback called: %@", data);
         responseCallback(@"Response from testObjcCallback");
     }];
     
+    // native call js
     [_bridge callHandler:@"testJavascriptHandler" data:@{ @"foo":@"before ready" }];
     
     [self renderButtons:webView];

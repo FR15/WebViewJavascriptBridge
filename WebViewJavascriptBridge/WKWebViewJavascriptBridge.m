@@ -8,8 +8,6 @@
 
 #import "WKWebViewJavascriptBridge.h"
 
-#if defined supportsWKWebView
-
 @implementation WKWebViewJavascriptBridge {
     __weak WKWebView* _webView;
     __weak id<WKNavigationDelegate> _webViewDelegate;
@@ -36,23 +34,23 @@
 - (void)send:(id)data responseCallback:(WVJBResponseCallback)responseCallback {
     [_base sendData:data responseCallback:responseCallback handlerName:nil];
 }
-
+// native call js
 - (void)callHandler:(NSString *)handlerName {
     [self callHandler:handlerName data:nil responseCallback:nil];
 }
-
+// native call js with param
 - (void)callHandler:(NSString *)handlerName data:(id)data {
     [self callHandler:handlerName data:data responseCallback:nil];
 }
-
+// native call js with param and callback
 - (void)callHandler:(NSString *)handlerName data:(id)data responseCallback:(WVJBResponseCallback)responseCallback {
     [_base sendData:data responseCallback:responseCallback handlerName:handlerName];
 }
-
+// native 注册js call native 回调，[string: function]
 - (void)registerHandler:(NSString *)handlerName handler:(WVJBHandler)handler {
     _base.messageHandlers[handlerName] = [handler copy];
 }
-
+// 移除回调
 - (void)removeHandler:(NSString *)handlerName {
     [_base.messageHandlers removeObjectForKey:handlerName];
 }
@@ -92,6 +90,8 @@
 
 
 - (void)WKFlushMessageQueue {
+    
+    // result 是 执行 js 方法的返回值
     [_webView evaluateJavaScript:[_base webViewJavascriptFetchQueyCommand] completionHandler:^(NSString* result, NSError* error) {
         if (error != nil) {
             NSLog(@"WebViewJavascriptBridge: WARNING: Error when trying to fetch data from WKWebView: %@", error);
@@ -99,7 +99,7 @@
         [_base flushMessageQueue:result];
     }];
 }
-
+/// webview delegate
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     if (webView != _webView) { return; }
     
@@ -133,6 +133,7 @@
     }
 }
 
+// 拦截 web 跳转
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
     if (webView != _webView) { return; }
     NSURL *url = navigationAction.request.URL;
@@ -195,4 +196,4 @@
 @end
 
 
-#endif
+

@@ -16,11 +16,11 @@ NSString * WebViewJavascriptBridge_js() {
 	// BEGIN preprocessorJSCode
 	static NSString * preprocessorJSCode = @__wvjb_js_func__(
 ;(function() {
-	if (window.WebViewJavascriptBridge) {
+	if (window.WebViewJavascriptBridge) { // 添加全局对象
 		return;
 	}
 
-	if (!window.onerror) {
+	if (!window.onerror) { // 添加方法
 		window.onerror = function(msg, url, line) {
 			console.log("WebViewJavascriptBridge: ERROR:" + msg + "@" + url + ":" + line);
 		}
@@ -44,10 +44,13 @@ NSString * WebViewJavascriptBridge_js() {
 	var uniqueId = 1;
 	var dispatchMessagesWithTimeoutSafety = true;
 
+    // 注册回调，[id: function]
 	function registerHandler(handlerName, handler) {
 		messageHandlers[handlerName] = handler;
 	}
 	
+
+    // js 通过这个方法调用 native
 	function callHandler(handlerName, data, responseCallback) {
 		if (arguments.length == 2 && typeof data == 'function') {
 			responseCallback = data;
@@ -60,12 +63,14 @@ NSString * WebViewJavascriptBridge_js() {
 	}
 	
 	function _doSend(message, responseCallback) {
-		if (responseCallback) {
+		if (responseCallback) { // 封装回调
 			var callbackId = 'cb_'+(uniqueId++)+'_'+new Date().getTime();
 			responseCallbacks[callbackId] = responseCallback;
 			message['callbackId'] = callbackId;
 		}
-		sendMessageQueue.push(message);
+		sendMessageQueue.push(message); // 入队列
+        // 拼接 url，这里会通过跳转让 native 取队列的消息
+        // native 通过 WebViewJavascriptBridge._fetchQueue()
 		messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://' + QUEUE_HAS_MESSAGE;
 	}
 
@@ -75,6 +80,7 @@ NSString * WebViewJavascriptBridge_js() {
 		return messageQueueString;
 	}
 
+    // messageJSON 是 native 传的一个字符串
 	function _dispatchMessageFromObjC(messageJSON) {
 		if (dispatchMessagesWithTimeoutSafety) {
 			setTimeout(_doDispatchMessageFromObjC);
@@ -88,30 +94,32 @@ NSString * WebViewJavascriptBridge_js() {
 			var responseCallback;
 
 			if (message.responseId) {
+                // 找到 js handler，然后调用
 				responseCallback = responseCallbacks[message.responseId];
 				if (!responseCallback) {
 					return;
 				}
-				responseCallback(message.responseData);
+				responseCallback(message.responseData);// 调用回调
 				delete responseCallbacks[message.responseId];
 			} else {
 				if (message.callbackId) {
 					var callbackResponseId = message.callbackId;
+                    // 这里又提供了一个callback
 					responseCallback = function(responseData) {
 						_doSend({ handlerName:message.handlerName, responseId:callbackResponseId, responseData:responseData });
 					};
 				}
-				
+				// 找到 js handler，然后调用
 				var handler = messageHandlers[message.handlerName];
 				if (!handler) {
 					console.log("WebViewJavascriptBridge: WARNING: no handler for message from ObjC:", message);
-				} else {
+				} else { // 调用js端方法
 					handler(message.data, responseCallback);
 				}
 			}
 		}
 	}
-	
+	// native 端调用此方法
 	function _handleMessageFromObjC(messageJSON) {
         _dispatchMessageFromObjC(messageJSON);
 	}

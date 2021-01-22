@@ -41,7 +41,7 @@ static int logMaxLength = 500;
     self.responseCallbacks = [NSMutableDictionary dictionary];
     _uniqueId = 0;
 }
-
+// native call js 核心方法
 - (void)sendData:(id)data responseCallback:(WVJBResponseCallback)responseCallback handlerName:(NSString*)handlerName {
     NSMutableDictionary* message = [NSMutableDictionary dictionary];
     
@@ -58,9 +58,10 @@ static int logMaxLength = 500;
     if (handlerName) {
         message[@"handlerName"] = handlerName;
     }
+    // 消息入队列
     [self _queueMessage:message];
 }
-
+// 拿到js端的消息队列，遍历调用
 - (void)flushMessageQueue:(NSString *)messageQueueString{
     if (messageQueueString == nil || messageQueueString.length == 0) {
         NSLog(@"WebViewJavascriptBridge: WARNING: ObjC got nil while fetching the message queue JSON from webview. This can happen if the WebViewJavascriptBridge JS is not currently present in the webview, e.g if the webview just loaded a new page.");
@@ -89,6 +90,8 @@ static int logMaxLength = 500;
                         responseData = [NSNull null];
                     }
                     
+                    // 封装msg
+                    // 传给 js
                     WVJBMessage* msg = @{ @"responseId":callbackId, @"responseData":responseData };
                     [self _queueMessage:msg];
                 };
@@ -97,14 +100,16 @@ static int logMaxLength = 500;
                     // Do nothing
                 };
             }
-            
+            // 拿到 native 注册的 block
             WVJBHandler handler = self.messageHandlers[message[@"handlerName"]];
             
             if (!handler) {
                 NSLog(@"WVJBNoHandlerException, No handler for message from JS: %@", message);
                 continue;
             }
-            
+            // call native block
+            // responseCallback - 可以是 js 端的注册回调
+            // js -> bridge.
             handler(message[@"data"], responseCallback);
         }
     }
@@ -112,8 +117,8 @@ static int logMaxLength = 500;
 
 - (void)injectJavascriptFile {
     NSString *js = WebViewJavascriptBridge_js();
-    [self _evaluateJavascript:js];
-    if (self.startupMessageQueue) {
+    [self _evaluateJavascript:js]; // 执行js
+    if (self.startupMessageQueue) { // clean queue
         NSArray* queue = self.startupMessageQueue;
         self.startupMessageQueue = nil;
         for (id queuedMessage in queue) {
@@ -166,11 +171,11 @@ static int logMaxLength = 500;
 - (void) _evaluateJavascript:(NSString *)javascriptCommand {
     [self.delegate _evaluateJavascript:javascriptCommand];
 }
-
+// native 调用 js，msg入队列
 - (void)_queueMessage:(WVJBMessage*)message {
-    if (self.startupMessageQueue) {
+    if (self.startupMessageQueue) { // 入队列
         [self.startupMessageQueue addObject:message];
-    } else {
+    } else { // 直接调用js
         [self _dispatchMessage:message];
     }
 }

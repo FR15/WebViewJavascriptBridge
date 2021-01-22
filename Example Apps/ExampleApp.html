@@ -16,8 +16,12 @@
 
     function setupWebViewJavascriptBridge(callback) {
         if (window.WebViewJavascriptBridge) { return callback(WebViewJavascriptBridge); }
-        if (window.WVJBCallbacks) { return window.WVJBCallbacks.push(callback); }
+        
+        if (window.WVJBCallbacks) {
+            return window.WVJBCallbacks.push(callback); }
+        
         window.WVJBCallbacks = [callback];
+        // 一开始就要触发一个跳转，然后webview 开始注入 bridge
         var WVJBIframe = document.createElement('iframe');
         WVJBIframe.style.display = 'none';
         WVJBIframe.src = 'https://__bridge_loaded__';
@@ -36,6 +40,7 @@
 			else { log.appendChild(el) }
 		}
 
+        // 注册方法回调[string: function]，等待native 调用
 		bridge.registerHandler('testJavascriptHandler', function(data, responseCallback) {
 			log('ObjC called testJavascriptHandler with', data)
 			var responseData = { 'Javascript Says':'Right back atcha!' }
